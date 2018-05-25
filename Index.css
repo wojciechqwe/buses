@@ -1,0 +1,133 @@
+@font-face {
+    font-family: Nova;
+    src: url(Fonts/NOVA/NovaMono.ttf);
+}
+
+
+body{
+    position: fixed;
+    background-color: #E2D6C4;
+    top: 0;
+    left: 0px;
+    margin: auto;
+    height: 100%;
+    width: 100%;
+    font-family: Nova;
+}
+
+#topMenu{
+    position: absolute;
+    background-color: #E2D6C4;
+    height: 10%;
+    width: 100%;
+    left: 0;
+    top: 0;
+}
+
+#mainContainer{
+    width: 100%;
+}
+
+#tracksAvailable{
+    position: absolute;
+    background-color: #537770;
+    height: 45%;
+    width: 50%;
+    left: 0;
+    top: 10%;
+}
+
+#trackInfo{
+    position: absolute;
+    background-color: #91B587;
+    height: 45%;
+    width: 50%;
+    right: 0;
+    top: 10%;
+    overflow-y: scroll;
+    overflow-x: hidden;
+    display:block;
+}
+::-webkit-scrollbar {
+    width: 0px;
+}
+
+#dateInfo{
+    position: absolute;
+    background-color: #BCD79F;
+    height: 45%;
+    width: 50%;
+    left: 0;
+    top: 55%;
+}
+
+.date{
+    background-color: #DBE6C3;
+    float: left;
+    width: 12%;
+    margin-left: 2%;
+    margin-top: 2%;
+    text-align: center;
+}
+
+.date:hover{
+    background-color: #537770;
+}
+
+#reservationInfo1{
+    position: absolute;
+    background-color: #DBE6C3;
+    height: 20%;
+    width: 50%;
+    right: 0;
+    top: 55%;
+}
+
+#reservationInfo2{
+    position: absolute;
+    background-color: #DBE6C3;
+    height: 45%;
+    width: 50%;
+    right: 0;
+    top: 75%;
+}
+
+#acceptRouteButton{
+    position: absolute;
+    border-radius: 20px;
+    background-color: #DBE6C3;
+    box-shadow: none;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 40%;
+    height: 30px;
+    border: none;
+    font-family: Nova;
+}
+
+.headerRoute{
+    position: relative;
+    width: 100%;
+    text-align: center;
+    padding: 10px;
+}
+
+.headerTime{
+    position: relative;
+    width: 40%;
+    left: 30%;
+    text-align: center;
+    padding: 3px;
+    background-color: #BCD79F;
+    margin-bottom: 3px;
+    border-radius: 20px;
+}
+
+.headerTime:hover{
+    background-color: #537770;    
+}
+
+.wrapper{
+    background-color: black;
+}

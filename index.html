@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+        <meta name="description" content="Tizen Wearable Web Basic Template" />
+        <title>FlashCards</title>
+        <link rel="stylesheet" type="text/css" href="Index.css">
+        <script src="main.js"></script>
+    </head>
+    
+    <body>
+        <div id="topMenu">
+            <input id="top-login" type="text" name="myPassword" placeholder="Login" value="worker"/>
+            <input id="top-password" type="password" name="myPassword" placeholder="Hasło" value="worker"/>
+            <input type="button" id="topLoginButton" value="Zaloguj"/>
+        </div>
+        <div id="infoAfterLogin"></div>
+        <div id="infoToRaport"></div>
+        <div id="mainContainer">
+            <div id="tracksAvailable"></div>
+            <div id="trackInfo"></div>
+            <div id="dateInfo"></div>    
+            <div id="reservationInfo1"></div>       
+            <div id="reservationInfo2"></div>                    
+        </div>
+        <div id="displayNone"></div>
+        
+        
+        <script src="https://www.gstatic.com/firebasejs/4.13.0/firebase.js"></script>
+        <script>
+          // Initialize Firebase
+            var config = {
+                apiKey: "AIzaSyDf2fg-U2pQhtDfZqneZzdwoj9d0I1dqlI",
+                authDomain: "busy-72b25.firebaseapp.com",
+                databaseURL: "https://busy-72b25.firebaseio.com",
+                projectId: "busy-72b25",
+                storageBucket: "busy-72b25.appspot.com",
+                messagingSenderId: "326841894077"
+            };
+            firebase.initializeApp(config);
+            //this information i need from firebase or some mySQL shiet
+            let checkDownload = [0,0,0,0,0];
+            function downloadOnStart() {
+            firebase.database().ref('connection/asd').on('value', function(snapshot){
+                connections = (snapshot.val());
+                checkDownload[0] = 1;
+            });
+            firebase.database().ref('city/asd').on('value', function(snapshot){
+                city = (snapshot.val());
+                checkDownload[1] = 1;
+            });
+            firebase.database().ref('users/asd').on('value', function(snapshot){
+                users = (snapshot.val());
+                checkDownload[2] = 1;
+            });
+            firebase.database().ref('connectionsWorkers/asd').on('value', function(snapshot){
+                connectionsWorkers = (snapshot.val());
+                checkDownload[3] = 1;
+            });
+            firebase.database().ref('workers/asd').on('value', function(snapshot){
+                workers = (snapshot.val());
+                checkDownload[4] = 1;
+            });
+          }
+
+          function uploadOnStart() {
+            firebase.database().ref('connection/').set({
+                asd:connections
+            });
+            firebase.database().ref('city/').set({
+                asd:city
+            });
+            firebase.database().ref('users/').set({
+                asd:users
+            });
+            firebase.database().ref('connectionsWorkers/').set({
+                asd:connectionsWorkers
+            });
+            firebase.database().ref('workers/').set({
+                asd:workers
+            });
+          }
+
+            let reservationTable = []; 
+            
+            let city = []; 
+            let connections = [];
+            let users = [["login","password","imie","nazwisko","791968098", 100]];
+            let connectionsWorkers = [[[1,2,1,2],[1,2,1,2]],
+                                     [[3,4,3,4],[3,4,3,4]],
+                                     [[5,6],[5,6]]];
+            let workers = [[1,"worker","worker","imie","nazwisko"]];
+
+            let choosenRoute = [null,null];
+
+            downloadOnStart();         
+
+          setInterval(() => {
+              let counter = 0, iDidItOnce = false;
+              for(let i = 0; i<checkDownload.length;i++)
+              {
+                  counter++;
+              }
+              if(counter == 5 && iDidItOnce == false)
+              {
+                iDidItOnce = true;
+
+            setTracksAvailable();
+            function setTracksAvailable(){
+                tracksAvailable.innerHTML = "Jadę z:"
+                tracksAvailable.innerHTML += '<form action="city1">';
+                city.forEach(element => {
+                    tracksAvailable.innerHTML += '<input type="radio" name="city1" id="city1' + element[0] + '">' + element[1];                    
+                });
+                tracksAvailable.innerHTML += '</form><br>';
+
+                tracksAvailable.innerHTML += "Do:"
+                tracksAvailable.innerHTML += '<form action="city2">';
+                city.forEach(element => {
+                    tracksAvailable.innerHTML += '<input type="radio" name="city2" id="city2' + element[0] + '">' + element[1];                    
+                });
+                tracksAvailable.innerHTML += '</form><br>';
+                
+                tracksAvailable.innerHTML += '<input id="acceptRouteButton" type="button" value="Wyszukaj trasę"></input>';
+            }
+            function download(id,filename, text, worker = null) {
+                if(worker == null)
+                {
+                    let foundInTable = false;
+                    let foundPosition;
+                    for(let i = 0; i < reservationTable.length; i++)
+                    {
+                        if(reservationTable[i][0] == id)
+                        {
+                            reservationTable[i][1] -= 1;
+                            foundInTable = true;
+                            foundPosition = i;
+                            reservationTable[i].push([text]);
+                        }
+                    }
+                    if(foundInTable == false)
+                    {
+                        reservationTable.push([id,80]);
+                        foundPosition = reservationTable.length - 1;
+                        reservationTable[reservationTable.length-1].push([text]);                        
+                    }
+                }
+                else
+                {
+                    let foundInTable = false;
+                    let foundPosition;
+                    for(let i = 0; i < reservationTable.length; i++)
+                    {
+                        if(reservationTable[i][0] == id)
+                        {
+                            foundInTable = true;
+                            foundPosition = i;
+                            text = reservationTable[i];
+                        }
+                    }
+                    if(foundInTable == false)
+                    {
+                        text = "nie zarezerwowano biletow na ta trase";
+                    }
+                }
+                
+
+                var element = document.createElement('a');
+                element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
+                element.setAttribute('download', filename);
+
+                element.style.display = 'none';
+                document.body.appendChild(element);
+
+                element.click();
+
+                document.body.removeChild(element);
+                reservationInfo2.innerHTML = reservationTable;
+            }       
+            function addReservation(id) {
+                reservationInfo1.innerHTML = 
+                '<br><textarea id="text-info1" rows="1" placeholder="Imię"></textarea>' +
+                '<br><textarea id="text-info2" rows="1" placeholder="Nazwisko"></textarea>' +
+                '<br><textarea id="text-info3" rows="1" placeholder="Telefon"></textarea>' +
+                '<br/><input type="button" id="ticket-button" value="Kup bez rejestracji"/>' +                
+                '<hr>'; 
+                reservationInfo2.innerHTML = 
+                '<textarea id="text-login1" rows="1" placeholder="Login"></textarea>' +
+                '<br><input id="text-login2" type="password" name="myPassword" placeholder="Hasło"/>' +
+                '<br/><input type="button" id="login-button" value="Zaloguj"/>';
+                document.getElementById("ticket-button").addEventListener("click", function(){
+                    var text = document.getElementById("text-info1").value + " " + document.getElementById("text-info2").value + " " + document.getElementById("text-info3").value;
+                    var filename = "hello.txt";
+                    
+                    download(id,filename, text);
+                }, false);
+                document.getElementById("login-button").addEventListener("click", function(){
+                    for(let i = 0; i < users.length; i++)
+                    {
+                        if(document.getElementById("text-login1").value == users[i][0] && document.getElementById("text-login2").value == users[i][1])
+                        {
+                            if(users[i][5] < 50)
+                            {
+                                reservationInfo2.innerHTML = users[i][2] + " " + users[i][3] + "<br>Ilość punktów: " + users[i][5] +
+                                '<br/><input type="button" id="buy-login-button" value="Kup bilet"/>' + 
+                                '<br/><input type="button" id="buy-login-button" value="Kup za punkty" disabled/>';
+                                document.getElementById("buy-login-button").addEventListener("click", function(){
+                                    var text = users[i][2] + "   " + users[i][3] + "  " + users[i][4];
+                                    var filename = "bilet.txt";
+                                    download(filename, text);
+                                });   
+                            }
+                            else
+                            {
+                                reservationInfo2.innerHTML = users[i][2] + " " + users[i][3] + "<br>Ilość punktów: " + users[i][5] +
+                                '<br/><input type="button" id="buy-login-button" value="Kup bilet"/>' + 
+                                '<br/><input type="button" id="buy-login-button" value="Kup za punkty"/>';
+                                document.getElementById("buy-login-button").addEventListener("click", function(){
+                                    var text = users[i][2] + "   " + users[i][3] + "  " + users[i][4];
+                                    var filename = "bilet.txt";
+                                    download(id, filename, text);
+                                });  
+                            }
+                            
+                        }
+                        else if(document.getElementById("text-login1").value == workers[i][1] && document.getElementById("text-login2").value == workers[i][2])
+                        {
+                            reservationInfo2.innerHTML = workers[i][3] + " " + workers[i][4] +
+                                '<br/><input type="button" id="buy-login-button" value="Wydrukuj info o biletach"/>';
+                                document.getElementById("buy-login-button").addEventListener("click", function(){
+                                    var text = users[i][2] + "   " + users[i][3] + "  " + users[i][4];
+                                    var filename = "ticketInfo.txt";
+                                    download(id, filename, text, 1);
+                                });  
+                        }
+                    }
+                }, false);
+            }          
+            function chooseRoute(connectionRow, connectionTimeColumns, toHigherIDCity) {
+                //dateInfo.innerHTML = city[connections[connectionRow][0][1]-1][1];
+                if(toHigherIDCity == 0)
+                {
+                    dateInfo.innerHTML = '<div class="headerRoute">Trasy z: ' + city[connections[connectionRow][0][0]-1][1] + " do " + city[connections[connectionRow][0][1]-1][1] + "</div><hr>";
+                    dateInfo.innerHTML += connections[connectionRow][toHigherIDCity + 1][connectionTimeColumns];                    
+                }
+                else if(toHigherIDCity == 1)
+                {
+                    dateInfo.innerHTML = "Trasy z: " + city[connections[connectionRow][0][1]-1][1] + " do " + city[connections[connectionRow][0][0]-1][1] + "<hr>";
+                    dateInfo.innerHTML += connections[connectionRow][toHigherIDCity + 1][connectionTimeColumns];                    
+                }
+                let newTime = new Date(), nowTime = new Date();
+                let monthNamesPL = ["Styczeń","Luty","Marzec","Kwiecień","Maj","Czerwiec","Lipiec","Sierpień","Wrzesień","Październik","Listopad","Grudzień"];
+                dateInfo.innerHTML += "<br>";     
+                dateInfo.innerHTML += monthNamesPL[newTime.getMonth()];     
+                dateInfo.innerHTML += "<hr>";      
+                console.log(newTime.getDay());
+                for(let i = newTime.getDay(); i > 1; i--)
+                {
+                    dateInfo.innerHTML += '<span class="date"></span>';
+                }
+                if(newTime.getDay() == 0)
+                {
+                    dateInfo.innerHTML += '<span class="date"></span>'+'<span class="date"></span>'+'<span class="date"></span>'+'<span class="date"></span>'+'<span class="date"></span>'+'<span class="date"></span>';
+                }
+                newTime.setDate(newTime.getDate() - 1);     
+
+                for(let i = 0; i < 31 ; i++)
+                {
+                    newTime.setDate(newTime.getDate() + 1);
+                    if(newTime.getDay() == 1)
+                    {
+                        dateInfo.innerHTML += '<br>';
+                    }
+                    if(newTime.getMonth() > nowTime.getMonth())
+                    {
+                        dateInfo.innerHTML += '<span onClick="addReservation('+ (String(connectionRow) + String(connectionTimeColumns) + String(toHigherIDCity) + String(newTime.getDate()) + String(newTime.getMonth())) +')" class="date">' + newTime.getDate() + "</span>";            
+                    }
+                    else
+                    {
+                        dateInfo.innerHTML += '<span onClick="addReservation('+ (String(connectionRow) + String(connectionTimeColumns) + String(toHigherIDCity) + String(newTime.getDate()) + String(newTime.getMonth())) +')" class="date">' + newTime.getDate() + "</span>";                                    
+                    }
+                }    
+            }
+            function getReservation (id)
+            {
+                let foundInTable = false;
+                let foundPosition;
+                for(let i = 0; i < reservationTable.length; i++)
+                {
+                    if(reservationTable[i][0] == id)
+                    {
+                        reservationTable[i][1] -= 1;
+                        foundInTable = true;
+                        foundPosition = i;
+                        reservationTable[i].push([text]);
+                    }
+                }
+                if(foundInTable == false)
+                {
+                    reservationTable.push([id,80]);
+                    foundPosition = reservationTable.length - 1;
+                }
+
+                var element = document.createElement('a');
+                element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
+                element.setAttribute('download', filename);
+
+                element.style.display = 'none';
+                document.body.appendChild(element);
+
+                element.click();
+
+                document.body.removeChild(element);
+                reservationInfo2.innerHTML = reservationTable;
+            }
+            
+            function generateRaport (day, month, year, info) {
+                let monthNamesPL = ["Styczeń","Luty","Marzec","Kwiecień","Maj","Czerwiec","Lipiec","Sierpień","Wrzesień","Październik","Listopad","Grudzień"];
+                infoToRaport.innerHTML = '<br/>Ilość paliwa<br/><input type="text" id="petrol" placeholder="Ilość litrów"/>' + 
+                                         '<br/>Ilość pasażerów<br/><input type="text" id="passengers" placeholder="Ilość osób"/>' + 
+                                         '<br/>Przejechane kilometry<br/><input type="text" id="distance" placeholder="Ilość kiometrów"/>' +
+                                         '<br/><input type="button" id="reportbutton" value="Pobierz raport"/>';
+                reportbutton.addEventListener('click', function(){
+                    text = info + "," + day + '/' + month + '/' + year + ':' + " - " + petrol.value + " - " + passengers.value + " - " + distance.value ;
+                    filename = "report";
+                    var element = document.createElement('a');
+                    element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
+                    element.setAttribute('download', filename);
+
+                    element.style.display = 'none';
+                    document.body.appendChild(element);
+
+                    element.click();
+
+                    document.body.removeChild(element);
+                    reservationInfo2.innerHTML = reservationTable;
+                });
+
+            }
+            function generateRaportDate(id) {
+                let newTime = new Date(), nowTime = new Date();
+                let monthNamesPL = ["Styczeń","Luty","Marzec","Kwiecień","Maj","Czerwiec","Lipiec","Sierpień","Wrzesień","Październik","Listopad","Grudzień"];
+                let informationAboutCourse = id.split(" ");
+                infoAfterLogin.innerHTML += "<br>";     
+                infoAfterLogin.innerHTML += informationAboutCourse; 
+                displayNone.innerHTML = informationAboutCourse;
+                newTime.setDate(newTime.getDate() - 7);                  
+                for(let i = 7; i > 0 ; i--)
+                {
+                    newTime.setDate(newTime.getDate() + 1);
+                    if(newTime.getMonth() > nowTime.getMonth())
+                    {
+                        infoAfterLogin.innerHTML += "<hr>";       
+                        nowTime.setMonth(nowTime.getMonth() + 1);
+                        infoAfterLogin.innerHTML += monthNamesPL[newTime.getMonth()];     
+                        infoAfterLogin.innerHTML += "<hr>";       
+                    }
+                    console.log(id);
+                    infoAfterLogin.innerHTML += '<div onClick="generateRaport(' + newTime.getDate() + ',' + newTime.getMonth() + ',' + newTime.getFullYear() + ',displayNone.innerHTML)">' + newTime.getDate() + "</div>";  
+                }    
+            }
+            
+            acceptRouteButton.addEventListener('click', function(){
+                for(let i = 1; i <= 3; i++)
+                {
+                   let name = "city1" + i;
+                    if(document.getElementById(name).checked == true)
+                    {
+                        choosenRoute[0] = i;
+                        break;
+                    } 
+                }
+
+                for(let i = 1; i <= 3; i++)
+                {
+                   let name = "city2" + i;
+                    if(document.getElementById(name).checked == true)
+                    {
+                        choosenRoute[1] = i;
+                        break;
+                    } 
+                }
+                let routeDirection = true;
+                if(choosenRoute[0] > choosenRoute[1])
+                {
+                    routeDirection = false;
+                }
+                choosenRoute.sort();
+                let idNameButton;
+                trackInfo.innerHTML = '<div class="headerRoute">Godziny odjazdów: </div>';
+
+                for(let i = 0; i < connections.length; i++)
+                {
+                    if(String(connections[i][0]) == String(choosenRoute))
+                    {
+                        if(routeDirection == true)
+                        {
+                            trackInfo.innerHTML += '<div class="headerRoute">' + city[choosenRoute[0]-1][1] + " do " + city[choosenRoute[1]-1][1] + "</div>";
+                            for(let j = 0; j < connections[i][1].length; j++)
+                            {
+                                idNameButton = i + j;
+                                trackInfo.innerHTML += '<div id="' + idNameButton + '" onclick="chooseRoute(' + i + ',' + j + ',0)" class="headerTime">' + connections[i][1][j] + "</div>";
+                            }
+                        }
+                        else if(routeDirection == false)
+                        {
+                            trackInfo.innerHTML += '<div class="headerRoute">' + city[choosenRoute[1]-1][1] + " do " + city[choosenRoute[0]-1][1] + "</div>";
+                            for(let j = 0; j < connections[i][2].length; j++)
+                            {
+                                idNameButton = i + j;
+                                trackInfo.innerHTML += '<div id="' + idNameButton + '" onclick="chooseRoute(' + i + ',' + j + ',1)" class="headerTime">' + connections[i][2][j] + "</div>";
+                            }    
+                        }
+                        else
+                        {
+                            trackInfo.innerHTML += "Nie ma takiej trasy" ;                        
+                        }
+                    }
+                }
+            });
+            topLoginButton.addEventListener("click", function(){
+                let foundUser = false;
+                    for(let i = 0; i < users.length; i++)
+                    {
+                        if(document.getElementById("top-login").value == users[i][0] && document.getElementById("top-password").value == users[i][1])
+                        {
+                            infoAfterLogin.innerHTML = users[i][2] + ' ' + users[i][3] + ' ' + users[i][4] + ' ' + users[i][5];
+                            foundUser = true;
+                        }
+                    }
+                    if( foundUser == false)
+                    {
+                        for(let i = 0; i < workers.length; i++)
+                        {
+                            if(document.getElementById("top-login").value == workers[i][1] && document.getElementById("top-password").value == workers[i][2])
+                            {
+                                infoAfterLogin.innerHTML = workers[i][3] + ' ' + workers[i][4] + '<br>';
+                                for(let j = 0; j < connectionsWorkers.length; j++)
+                                {
+                                    for(let k = 0; k < connectionsWorkers[j].length; k++)
+                                    {
+                                        for(let l = 0; l < connectionsWorkers[j][k].length; l++)
+                                        {
+                                            if(connectionsWorkers[j][k][l] == workers[i][0])
+                                            {
+                                                infoAfterLogin.innerHTML += '<div onClick="generateRaportDate(String(this.innerHTML))">' + city[connections[j][0][k]-1][1] + ' ' + city[Math.abs(connections[j][0][k]-2)][1] + ' ' + connections[j][k+1][l] + "</div>";
+
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }, false);
+            }
+          }, 1000);
+        </script>
+    </body>
+</html>
